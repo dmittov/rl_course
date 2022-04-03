@@ -15,3 +15,5 @@ jobs:
           black_args: ". --check"
       - name: mypy
         uses: jpetrucciani/mypy-check@master
+        with:
+          mypy_flags: "--ignore-missing-imports"
