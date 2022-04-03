@@ -1,0 +1,6 @@
+dependencies:
+  - black
+  - tqdm
+  - pip:
+      - gym
+      - git+https://github.com/haje01/gym-tictactoe.git
