@@ -1,14 +1,7 @@
-from agent import RandomAgent, MeanaceAgent
+from agent import RandomAgent, MenaceAgent
 from tqdm import tqdm
 from gym_tictactoe.env import (
     TicTacToeEnv,
-    set_log_level_by,
-    agent_by_mark,
-    next_mark,
-    check_game_status,
-    after_action_state,
-    O_REWARD,
-    X_REWARD,
 )
 
 
@@ -17,7 +10,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    agent = MeanaceAgent()
+    agent = MenaceAgent()
     partner_agent = RandomAgent()
     env = TicTacToeEnv()
     env.set_start_mark("X")
