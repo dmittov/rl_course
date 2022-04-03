@@ -5,10 +5,15 @@ on:
       - "main"
 jobs:
   format-check:
-    name: black formatter
+    name: code check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: rickstaa/action-black@v1
+      - name: black
+        uses: rickstaa/action-black@v1
         with:
           black_args: ". --check"
+      - name: mypy
+        uses: jpetrucciani/mypy-check@master
+        with:
+          mypy_flags: "--ignore-missing-imports"
