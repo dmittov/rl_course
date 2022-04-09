@@ -3,7 +3,7 @@
 ## Environment
 
 * ```bash
-  conda create -n week1 -f environment.yaml
+  conda env create -n week1 -f environment.yaml
   conda activate week1
   ```
 
