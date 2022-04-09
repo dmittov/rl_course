@@ -9,4 +9,4 @@
 
 ## Usage
 
-* run run.py in jupyter
+* run run.ipynb in jupyter
