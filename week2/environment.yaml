@@ -1,0 +1,8 @@
+dependencies:
+  - black
+  - tqdm
+  - pip
+  - scipy
+  - numpy
+  - jupyter
+  - matplotlib
