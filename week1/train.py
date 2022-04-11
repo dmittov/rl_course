@@ -28,10 +28,8 @@ if __name__ == "__main__":
                 continue
             agent_action = agent.act(state, env.available_actions())
             state, reward, is_done, info = env.step(agent_action)
-
     agent.save("agent.dat")
     # test
-    partner_agent = RandomAgent()
     n_wins = 0
     n_loss = 0
     for episode in tqdm(range(n_episodes)):
