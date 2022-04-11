@@ -9,7 +9,6 @@
 
 ## TODO
 
-* Environment wrappers
 * Flatten space
 
 ## Usage
