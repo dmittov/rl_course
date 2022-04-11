@@ -1,6 +1,6 @@
 from agent import RandomAgent, MenaceAgent
 from tqdm import tqdm
-from gym_tictactoe.env import TicTacToeEnv, X_REWARD, O_REWARD, NO_REWARD
+from gym_tictactoe.env import TicTacToeEnv, X_REWARD
 
 
 def main() -> None:
