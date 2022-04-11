@@ -1,5 +1,6 @@
 import abc
 import random
+import pickle
 
 
 class BaseAgent(abc.ABC):
@@ -30,5 +31,17 @@ class RandomAgent(BaseAgent):
         pass
 
 
-# Fake Menace
-MenaceAgent = RandomAgent
+class MenaceAgent(BaseAgent):
+    def __init__(self):
+        self.__match_boxes = dict()
+
+    def save(self, path: str) -> None:
+        with open(path, "wb") as fh:
+            pickle.dump(self.__match_boxes, fh)
+
+    def load(self, path: str) -> None:
+        with open(path, "rb") as fh:
+            self.__match_boxes[path] = pickle.load(fh)
+
+    def act(self, state, actions) -> int:
+        pass
