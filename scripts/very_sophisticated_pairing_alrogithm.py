@@ -19,11 +19,6 @@ if len(valid_members) % 2 != 0:
 
 random.shuffle(valid_members)
 
-final_pairing = list(
-    zip(
-        valid_members[0::2],
-        valid_members[1::2]
-    )
-)
+final_pairing = list(zip(valid_members[0::2], valid_members[1::2]))
 
 [print(i) for i in final_pairing]
