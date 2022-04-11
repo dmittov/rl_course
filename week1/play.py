@@ -33,6 +33,7 @@ def main() -> None:
     human_agent = HumanAgent("X")
     env.set_start_mark("X")
     env.reset()
+    agent.reset()
     env.render()
     while not is_done:
         action = human_agent.act(env.available_actions())
