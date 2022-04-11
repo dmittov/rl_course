@@ -9,11 +9,9 @@ def main() -> None:
 
 if __name__ == "__main__":
     agent = MenaceAgent()
-
+    partner_agent = RandomAgent()
     env = TicTacToeEnv()
     env.set_start_mark("X")
-
-    partner_agent = RandomAgent()
     # train
     n_episodes = 100_000
     for episode in tqdm(range(n_episodes)):
