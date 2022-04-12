@@ -164,6 +164,8 @@ class OffPolicyMCAgent(BaseDiscreteAgent):
             w = rho / self.weights[state, action]
             val = G - self.action_values[state, action]
             self.action_values[state, action] += w * val
+            if np.argmax(self.action_values[state]) != action:
+                break
             rho /= self.behavioral_policy[state, action]
             if rho == 0:
                 break
