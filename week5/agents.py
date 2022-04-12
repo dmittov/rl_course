@@ -132,22 +132,22 @@ class OffPolicyMCAgent(BaseDiscreteAgent):
         ):
             raise ValueError("Invalid behavioral policy shape")
         super().__init__(n_states)
-        self.__behavioral_policy = behavioral_policy
-        self.__action_values = np.array(
+        self.behavioral_policy = behavioral_policy
+        self.action_values = np.array(
             [[1.0 for _ in self.action_space] for _ in range(n_states)]
         )
-        self.__weights = np.array(
+        self.weights = np.array(
             [[0.0 for _ in self.action_space] for _ in range(n_states)]
         )
         self.gamma = 1.0
 
     def behavioral_act(self, state: int) -> int:
-        action = np.random.choice(self.action_space, p=self.__behavioral_policy[state])
+        action = np.random.choice(self.action_space, p=self.behavioral_policy[state])
         return action
 
     def act(self, state: int) -> int:
         # follow greedy policy on inference
-        action = np.argmax(self.__action_values[state])
+        action = np.argmax(self.action_values[state])
         return action
 
     def update(self, steps: list) -> None:
@@ -160,11 +160,11 @@ class OffPolicyMCAgent(BaseDiscreteAgent):
         for step in steps[::-1]:
             reward, state, action = step
             G = G * self.gamma + reward
-            self.__weights[state, action] += rho
-            w = rho / self.__weights[state, action]
-            val = G - self.__action_values[state, action]
-            self.__action_values[state, action] += w * val
-            rho /= self.__behavioral_policy[state, action]
+            self.weights[state, action] += rho
+            w = rho / self.weights[state, action]
+            val = G - self.action_values[state, action]
+            self.action_values[state, action] += w * val
+            rho /= self.behavioral_policy[state, action]
             if rho == 0:
                 break
             # TODO: stop condition (?)
