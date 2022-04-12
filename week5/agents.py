@@ -139,23 +139,7 @@ class OffPolicyMCAgent(BaseDiscreteAgent):
         self.__weights = np.array(
             [[0.0 for _ in self.action_space] for _ in range(n_states)]
         )
-        self.__policy = np.array(
-            [[1.0 / 3 for _ in self.action_space] for _ in range(n_states)]
-        )
         self.gamma = 1.0
-
-    def compute_policy(self, eps: float) -> None:
-        policy = []
-        for state in range(self.n_states):
-            action_probs = []
-            greedy_action = np.argmax(self.__action_values[state])
-            for action in self.action_space:
-                if action == greedy_action:
-                    action_probs.append(1.0 - eps)
-                else:
-                    action_probs.append(eps / 2)
-            policy.append(action_probs)
-        self.__policy = np.array(policy)
 
     def behavioral_act(self, state: int) -> int:
         action = np.random.choice(self.action_space, p=self.__behavioral_policy[state])
@@ -179,9 +163,8 @@ class OffPolicyMCAgent(BaseDiscreteAgent):
             self.__weights[state, action] += rho
             w = rho / self.__weights[state, action]
             val = G - self.__action_values[state, action]
-            self.__action_values[state][action] += w * val
-            rho *= (
-                self.__policy[state, action] / self.__behavioral_policy[state, action]
-            )
+            self.__action_values[state, action] += w * val
+            rho /= self.__behavioral_policy[state, action]
             if rho == 0:
                 break
+            # TODO: stop condition (?)
