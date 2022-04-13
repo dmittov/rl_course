@@ -1,23 +1,48 @@
 import abc
+from typing import Iterable, Generic, TypeVar, Type, ClassVar
 import numpy as np
-from functools import cached_property
-from typing import Any
-from gym import ObservationWrapper, Env
+from gym.core import ObsType, ActType
 
 
-class BaseAgent(abc.ABC):
+class ActionSpace(abc.ABC):
     @property
-    def action_space(self) -> np.ndarray:
-        return np.array([0, 1, 2])
-
-    @abc.abstractmethod
-    def act(self, observation: Any) -> int:
+    @abc.abstractclassmethod
+    def action_space(cls) -> Iterable[ActType]:
         pass
 
 
-class OrininalSmartAgent(BaseAgent):
+class MountainCarActions(ActionSpace):
+    @property
+    def action_space(self) -> Iterable[ActType]:
+        return np.array([0, 1, 2])
+
+
+class BlackjackActions(ActionSpace):
+    @property
+    def action_space(self) -> Iterable[ActType]:
+        return np.array([0, 1])
+
+
+TAction = TypeVar("TAction", bound=ActionSpace)
+
+
+class BaseAgent(Generic[TAction], abc.ABC):
+    @property
+    def action_storage(self):
+        return ClassVar[Type[TAction]]
+
+    @property
+    def action_space(self) -> Iterable[ActType]:
+        return self.action_storage.action_space
+
+    @abc.abstractmethod
+    def act(self, observation: ObsType) -> ActType:
+        pass
+
+
+class OrininalSmartAgent(BaseAgent[MountainCarActions]):
     # https://zhiqingxiao.github.io/rl-book/html/MountainCar-v0_ClosedForm.html
-    def act(self, state: np.ndarray) -> int:
+    def act(self, state: ObsType) -> ActType:
         position, velocity = state
         lb = min(
             -0.09 * (position + 0.25) ** 2 + 0.03, 0.3 * (position + 0.9) ** 4 - 0.008
@@ -30,116 +55,42 @@ class OrininalSmartAgent(BaseAgent):
         return action
 
 
-class Discretizer:
-    # game properties: https://github.com/openai/gym/wiki/MountainCar-v0
-    min_position = -1.2
-    max_position = 0.6
-    min_velocity = -0.07
-    max_velocity = 0.07
+class BaseDiscreteAgent(BaseAgent[TAction]):
+    def __init__(self, n_states: int) -> None:
+        self.__n_states = n_states
 
-    def __init__(self, position_buckets: int, velocity_buckets: int) -> None:
-        # discretization options
-        self.velocity_buckets = velocity_buckets
-        self.position_buckets = position_buckets
-
-    @cached_property
-    def n_states(self):
-        return self.velocity_buckets * self.position_buckets
-
-    @cached_property
-    def velocity_step(self):
-        return (self.max_velocity - self.min_velocity) / self.velocity_buckets
-
-    @cached_property
-    def position_step(self):
-        return (self.max_position - self.min_position) / self.position_buckets
-
-    def discretize(self, observation: np.ndarray) -> int:
-        position, velocity = observation
-        discrete_position = int((position - self.min_position) / self.position_step)
-        discrete_velocity = int((velocity - self.min_velocity) / self.velocity_step)
-        state = discrete_position * self.velocity_buckets + discrete_velocity
-        return state
-
-    def restore(self, state: int) -> np.ndarray:
-        discrete_position = state // self.velocity_buckets
-        restored_position = self.min_position + self.position_step * discrete_position
-        discrete_velocity = state % self.velocity_buckets
-        restored_velocity = self.min_velocity + self.velocity_step * discrete_velocity
-        return np.array([restored_position, restored_velocity])
+    def n_states(self) -> int:
+        return self.__n_states
 
 
-def get_discrete_policy(
-    discretizer: Discretizer, agent: BaseAgent, eps: float
-) -> np.ndarray:
-    policy = []
-    for state in range(discretizer.n_states):
-        action_probs = []
-        restored_observation = discretizer.restore(state)
-        greedy_action = agent.act(restored_observation)
-        for action in agent.action_space:
-            if action == greedy_action:
-                action_probs.append(1.0 - eps)
-            else:
-                action_probs.append(eps / 2)
-        policy.append(action_probs)
-    return np.array(policy)
-
-
-class DiscreteWrapper(ObservationWrapper):
-    def __init__(self, env: Env, discretizer: Discretizer) -> None:
-        super(ObservationWrapper, self).__init__(env)
-        self.__discretizer = discretizer
-
-    def observation(self, observation: np.ndarray) -> int:
-        return self.__discretizer.discretize(observation)
-
-
-class BaseDiscreteAgent(BaseAgent):
-    def __init__(self, n_states: int):
-        self.n_states = n_states
-
-    @abc.abstractmethod
-    def act(self, state: int) -> int:
-        pass
-
-
-class DisceteSmartAgent(BaseDiscreteAgent):
+class DisceteSmartAgent(BaseDiscreteAgent[MountainCarActions]):
     def __init__(self, n_states: int, policy: np.ndarray):
-        if (
-            (len(policy.shape) != 2)
-            or (policy.shape[0] != n_states)
-            or (policy.shape[1] != len(self.action_space))
-        ):
-            raise ValueError("Invalid policy shape")
         super().__init__(n_states)
         self.__policy = policy
 
-    def act(self, state: int) -> int:
+    @property
+    def n_states(self) -> int:
+        return self.__n_states
+
+    def act(self, state: ObsType) -> ActType:
         return np.random.choice(self.action_space, p=self.__policy[state])
 
 
-class OffPolicyMCAgent(BaseDiscreteAgent):
-    def __init__(
-        self,
-        n_states: int,
-        behavioral_policy: np.ndarray,
-    ):
-        if (
-            (len(behavioral_policy.shape) != 2)
-            or (behavioral_policy.shape[0] != n_states)
-            or (behavioral_policy.shape[1] != len(self.action_space))
-        ):
-            raise ValueError("Invalid behavioral policy shape")
+class ActionValueAgent(BaseDiscreteAgent[TAction]):
+    def __init__(self, n_states: int) -> None:
         super().__init__(n_states)
-        self.behavioral_policy = behavioral_policy
         self.action_values = np.array(
-            [[1.0 for _ in self.action_space] for _ in range(n_states)]
+            [[0.0 for _ in self.action_space] for _ in range(n_states)]
         )
         self.weights = np.array(
             [[0.0 for _ in self.action_space] for _ in range(n_states)]
         )
-        self.gamma = 1.0
+
+
+class OffPolicyMCAgent(ActionValueAgent[TAction]):
+    @abc.abstractproperty
+    def behavioral_policy(self) -> np.array:
+        pass
 
     def behavioral_act(self, state: int) -> int:
         action = np.random.choice(self.action_space, p=self.behavioral_policy[state])
@@ -150,23 +101,20 @@ class OffPolicyMCAgent(BaseDiscreteAgent):
         action = np.argmax(self.action_values[state])
         return action
 
-    def update(self, steps: list) -> None:
-        """
-        step = (reward, state, action)
-        """
-        # FIXME: not checked
-        G = 0.0
-        rho = 1.0
-        for step in steps[::-1]:
-            reward, state, action = step
-            G = G * self.gamma + reward
-            self.weights[state, action] += rho
-            w = rho / self.weights[state, action]
-            val = G - self.action_values[state, action]
-            self.action_values[state, action] += w * val
-            if np.argmax(self.action_values[state]) != action:
-                break
-            rho /= self.behavioral_policy[state, action]
-            if rho == 0:
-                break
-            # TODO: stop condition (?)
+
+class BlackjackOffPolicyMCAgent(OffPolicyMCAgent[BlackjackActions]):
+    def __init__(self, behavioral_policy: np.ndarray) -> None:
+        self.__behavioral_policy = behavioral_policy
+        self.__n_states = len(self.__behavioral_policy)
+
+    @property
+    def n_states(self):
+        return self.__n_states
+
+    @property
+    def behavioral_policy(self):
+        return self.__behavioral_policy
+
+
+# class MountainCarOffPolicyMCAgent(MountainCarActionMixin, OffPolicyMCAgent):
+#     pass
