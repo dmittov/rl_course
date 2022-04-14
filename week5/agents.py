@@ -1,46 +1,32 @@
 import abc
-from typing import Iterable, Generic, TypeVar, Type, ClassVar
+from typing import Iterable
 import numpy as np
 from gym.core import ObsType, ActType
 
 
-class ActionSpace(abc.ABC):
-    @property
-    @abc.abstractclassmethod
-    def action_space(cls) -> Iterable[ActType]:
+class BaseAgent(abc.ABC):
+    @abc.abstractproperty
+    def action_space(self) -> Iterable[ActType]:
         pass
-
-
-class MountainCarActions(ActionSpace):
-    @property
-    def action_space(self) -> Iterable[ActType]:
-        return np.array([0, 1, 2])
-
-
-class BlackjackActions(ActionSpace):
-    @property
-    def action_space(self) -> Iterable[ActType]:
-        return np.array([0, 1])
-
-
-TAction = TypeVar("TAction", bound=ActionSpace)
-
-
-class BaseAgent(Generic[TAction], abc.ABC):
-    @property
-    def action_storage(self):
-        return ClassVar[Type[TAction]]
-
-    @property
-    def action_space(self) -> Iterable[ActType]:
-        return self.action_storage.action_space
 
     @abc.abstractmethod
     def act(self, observation: ObsType) -> ActType:
         pass
 
 
-class OrininalSmartAgent(BaseAgent[MountainCarActions]):
+class MountainCarAgent(BaseAgent):
+    @property
+    def action_space(self) -> Iterable[ActType]:
+        return np.array([0, 1, 2])
+
+
+class BlackjackAgent(BaseAgent):
+    @property
+    def action_space(self) -> Iterable[ActType]:
+        return np.array([0, 1])
+
+
+class OrininalSmartAgent(MountainCarAgent):
     # https://zhiqingxiao.github.io/rl-book/html/MountainCar-v0_ClosedForm.html
     def act(self, state: ObsType) -> ActType:
         position, velocity = state
@@ -55,7 +41,7 @@ class OrininalSmartAgent(BaseAgent[MountainCarActions]):
         return action
 
 
-class BaseDiscreteAgent(BaseAgent[TAction]):
+class BaseDiscreteAgent(BaseAgent):
     def __init__(self, n_states: int) -> None:
         self.__n_states = n_states
 
@@ -63,22 +49,19 @@ class BaseDiscreteAgent(BaseAgent[TAction]):
         return self.__n_states
 
 
-class DisceteSmartAgent(BaseDiscreteAgent[MountainCarActions]):
+class DisceteSmartAgent(BaseDiscreteAgent, MountainCarAgent):
     def __init__(self, n_states: int, policy: np.ndarray):
         super().__init__(n_states)
         self.__policy = policy
-
-    @property
-    def n_states(self) -> int:
-        return self.__n_states
 
     def act(self, state: ObsType) -> ActType:
         return np.random.choice(self.action_space, p=self.__policy[state])
 
 
-class ActionValueAgent(BaseDiscreteAgent[TAction]):
+class ActionValueAgent(BaseDiscreteAgent):
     def __init__(self, n_states: int) -> None:
         super().__init__(n_states)
+
         self.action_values = np.array(
             [[0.0 for _ in self.action_space] for _ in range(n_states)]
         )
@@ -87,34 +70,35 @@ class ActionValueAgent(BaseDiscreteAgent[TAction]):
         )
 
 
-class OffPolicyMCAgent(ActionValueAgent[TAction]):
-    @abc.abstractproperty
-    def behavioral_policy(self) -> np.array:
-        pass
+class OffPolicyMCAgent(ActionValueAgent):
+    def __init__(self, behavioral_policy: np.ndarray) -> None:
+        n_states = len(behavioral_policy)
+        super().__init__(n_states)
+        if len(behavioral_policy) != n_states:
+            raise ValueError(
+                f"Behavioral policy size ({len(behavioral_policy)}) doesn't match the numer of states ({n_states})"
+            )
+        self.__behavioral_policy = behavioral_policy
 
-    def behavioral_act(self, state: int) -> int:
+    @property
+    def behavioral_policy(self) -> np.array:
+        return self.__behavioral_policy
+
+    def behavioral_act(self, state: ObsType) -> ActType:
         action = np.random.choice(self.action_space, p=self.behavioral_policy[state])
         return action
 
-    def act(self, state: int) -> int:
+    def act(self, state: ObsType) -> ActType:
         # follow greedy policy on inference
         action = np.argmax(self.action_values[state])
         return action
 
 
-class BlackjackOffPolicyMCAgent(OffPolicyMCAgent[BlackjackActions]):
+class BlackjackOffPolicyMCAgent(OffPolicyMCAgent, BlackjackAgent):
     def __init__(self, behavioral_policy: np.ndarray) -> None:
-        self.__behavioral_policy = behavioral_policy
-        self.__n_states = len(self.__behavioral_policy)
-
-    @property
-    def n_states(self):
-        return self.__n_states
-
-    @property
-    def behavioral_policy(self):
-        return self.__behavioral_policy
+        super().__init__(behavioral_policy)
 
 
-# class MountainCarOffPolicyMCAgent(MountainCarActionMixin, OffPolicyMCAgent):
-#     pass
+class MountainCarOffPolicyMCAgent(OffPolicyMCAgent, MountainCarAgent):
+    def __init__(self, behavioral_policy: np.ndarray) -> None:
+        super().__init__(behavioral_policy)
