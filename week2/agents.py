@@ -82,3 +82,43 @@ class ThompsonAgent(BaseAgent):
         b_add_denominator = 2 * old_params.tau2 * inv_tau2
         b = old_params.b + b_add_numerator / b_add_denominator
         self.params[action] = self.Params(mu, tau2, a, b)
+
+
+class UCBAgent(BaseAgent):
+    """Use Upper confidence bounds to make decisions"""
+
+    @dataclass
+    class Params:
+        c: float
+        Q: float
+        N: int
+        t: int
+
+    def __init__(self, arms: int):
+        super().__init__(arms)
+        # constant c
+        self.params = [self.Params(1, None, 0, 0) for _ in range(arms)]
+
+    def act(self):
+        results = []
+        for i, arms in enumerate(self.params):
+            if arms.Q is None:
+                return i
+            else:
+                results.append(arms.Q + arms.c * np.sqrt(np.log(arms.t) / arms.N))
+        return np.argmax(results)
+
+    def update(self, action: int, value: float) -> None:
+        for params in self.params:
+            params.t += 1
+
+        old_params = self.params[action]
+        Q = old_params.Q
+        N = old_params.N
+
+        if Q is None:
+            self.params[action].Q = value
+        else:
+            self.params[action].Q = (N / (N + 1)) * Q + (1 / N + 1) * value
+
+        self.params[action].N += 1
