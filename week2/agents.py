@@ -30,7 +30,41 @@ class RandomAgent(BaseAgent):
         _ = idx
         _ = value
         return None
+    
 
+class UCBAgent(BaseAgent):
+    @dataclass
+    class Params:
+        mu: float
+        c: float
+        t: int
+        N: int
+    
+    def __init__(self, arms: int):
+        super().__init__(arms)
+        self.params = [self.Params(0, 2, 1, 1) for _ in range(arms)]
+
+    def get_value(self, action: int) -> float:
+        params = self.params[action]
+        return params.mu + params.c*np.sqrt(np.log(params.t)/params.N)
+    
+    def act(self):
+        values = []
+        for idx in range(self.arms):
+            values.append(self.get_value(idx))
+        return np.argmax(values)
+    
+    def update(self, action: int, value: float):
+        t = self.params[action].t + 1
+        for idx in range(self.arms):
+            if idx==action:
+                N = self.params[action].N + 1
+                self.params[action] = self.Params(value, 2, t, N)
+            else:
+                N = self.params[idx].N
+                mu = self.params[idx].mu
+                self.params[idx] = self.Params(mu, 2, t, N)
+        
 
 class ThompsonAgent(BaseAgent):
     """Use Thompson sampling to make decisions"""
