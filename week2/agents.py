@@ -90,7 +90,7 @@ class GradientAgent(BaseAgent):
         self.alpha = alpha
 
         self.H = np.ones((arms,))
-        self.mean_R = 0
+        self.mean_R = 0.0
         self.n = 0
 
     def _softmax(self, x):
