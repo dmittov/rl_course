@@ -1,7 +1,7 @@
 import abc
 from dataclasses import dataclass
 import random
-from typing import Tuple
+from typing import Tuple, Optional
 import scipy.stats as stats
 import numpy as np
 
@@ -92,11 +92,10 @@ class UCBAgent(BaseAgent):
         c: float
         N: int
         t: int
-        Q: float = None
+        Q: Optional[float] = None
 
     def __init__(self, arms: int):
         super().__init__(arms)
-        # constant c
         self.params = [self.Params(1, 0, 0) for _ in range(arms)]
 
     def act(self) -> int:
