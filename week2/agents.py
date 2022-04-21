@@ -90,16 +90,16 @@ class UCBAgent(BaseAgent):
     @dataclass
     class Params:
         c: float
-        Q: float
         N: int
         t: int
+        Q: float = None
 
     def __init__(self, arms: int):
         super().__init__(arms)
         # constant c
-        self.params = [self.Params(1, None, 0, 0) for _ in range(arms)]
+        self.params = [self.Params(1, 0, 0) for _ in range(arms)]
 
-    def act(self):
+    def act(self) -> int:
         results = []
         for i, arms in enumerate(self.params):
             if arms.Q is None:
@@ -119,6 +119,6 @@ class UCBAgent(BaseAgent):
         if Q is None:
             self.params[action].Q = value
         else:
-            self.params[action].Q = (N / (N + 1)) * Q + (1 / N + 1) * value
+            self.params[action].Q = (N / (N + 1)) * Q + (1 / (N + 1)) * value
 
         self.params[action].N += 1
