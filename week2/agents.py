@@ -59,7 +59,8 @@ class UCBAgent(BaseAgent):
         for idx in range(self.arms):
             if idx==action:
                 N = self.params[action].N + 1
-                self.params[action] = self.Params(value, 2, t, N)
+                mu = self.params[action].mu*(N/(N+1)) + value*(1/(N+1))
+                self.params[action] = self.Params(mu, 2, t, N)
             else:
                 N = self.params[idx].N
                 mu = self.params[idx].mu
