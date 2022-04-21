@@ -82,3 +82,29 @@ class ThompsonAgent(BaseAgent):
         b_add_denominator = 2 * old_params.tau2 * inv_tau2
         b = old_params.b + b_add_numerator / b_add_denominator
         self.params[action] = self.Params(mu, tau2, a, b)
+
+class GradientAgent(BaseAgent):
+    def __init__(self, arms: int, alpha: float):
+        super().__init__(arms)
+        self.alpha = alpha
+
+        self.H = np.ones((arms,))
+        self.mean_R = 0
+        self.n = 0
+
+    def _softmax(self, x):
+        #return np.exp(x - x.max()) / np.sum(np.exp(x - x.max()), axis=0)
+        return np.exp(x) / np.sum(np.exp(x),axis=0)
+
+    def act(self):
+        return np.argmax(self.H)
+
+    def update(self, idx: int, value: float):
+        self.n += 1
+        probas = self._softmax(self.H)
+        self.mean_R = self.mean_R + (value - self.mean_R) / self.n
+        for i in range(self.arms):
+            if i == idx:
+                self.H[i] = self.H[i] + self.alpha*(value-self.mean_R)*(1-probas[i])
+            else:
+                self.H[i] = self.H[i] - self.alpha*(value-self.mean_R)*probas[i]
