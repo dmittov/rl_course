@@ -70,7 +70,7 @@ class ThompsonAgent(BaseAgent):
             scale=(params.tau2 * (params.b / params.a)) ** 0.5,
         ).mean()
         sigma2 = stats.invgamma(a=params.a, scale=params.b).mean()
-        return mu, sigma2 ** 0.5
+        return mu, sigma2**0.5
 
     def update(self, action: int, value: float) -> None:
         old_params = self.params[action]
