@@ -31,6 +31,7 @@ class RandomAgent(BaseAgent):
         _ = value
         return None
 
+
 class EpsilonGreedy(BaseAgent):
     def __init__(self, arms: int, epsilon: float = 0.1):
         super().__init__(arms)
@@ -48,6 +49,7 @@ class EpsilonGreedy(BaseAgent):
 
     def update(self, action: int, value: float) -> None:
         self.samples[action] = value
+
 
 class OptimisticInitial(EpsilonGreedy):
     def __init__(self, arms: int, epsilon: float = 0.0, alpha: int = 5):
