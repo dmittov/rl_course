@@ -1,4 +1,4 @@
-from typing import MutableSet, List, overload, TypeVar, Generic
+from typing import MutableSet, List, final, TypeVar, Generic
 import numpy as np
 from wrappers import StepResult
 from agents import BaseAgent, OffPolicyMCAgent
@@ -18,12 +18,11 @@ class BaseTrainer(abc.ABC, Generic[Agent]):
 
 
 class MCControlTrainer(BaseTrainer[OffPolicyMCAgent]):
-    @overload
     def __init__(self, gamma: float) -> None:
         super().__init__()
         self.gamma = gamma
 
-    @overload
+    @final
     def update(
         self, agent: OffPolicyMCAgent, steps: List[StepResult]
     ) -> MutableSet[int]:
