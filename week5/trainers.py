@@ -10,7 +10,9 @@ class BaseTrainer(abc.ABC):
     to update agent action values"""
 
     @abc.abstractmethod
-    def update(agent: ActionValueAgent, steps: List[StepResult]) -> MutableSet[int]:
+    def update(
+        self, agent: ActionValueAgent, steps: List[StepResult]
+    ) -> MutableSet[int]:
         """Update action values, return set of updated states"""
         pass
 
