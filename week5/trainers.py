@@ -1,7 +1,7 @@
 from typing import MutableSet, List
 import numpy as np
 from wrappers import StepResult
-from agents import OffPolicyMCAgent
+from agents import ActionValueAgent, OffPolicyMCAgent
 import abc
 
 
@@ -10,7 +10,7 @@ class BaseTrainer(abc.ABC):
     to update agent action values"""
 
     @abc.abstractmethod
-    def update(agent: OffPolicyMCAgent, steps: List[StepResult]) -> MutableSet[int]:
+    def update(agent: ActionValueAgent, steps: List[StepResult]) -> MutableSet[int]:
         """Update action values, return set of updated states"""
         pass
 
