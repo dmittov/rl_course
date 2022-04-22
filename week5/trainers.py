@@ -1,4 +1,4 @@
-from typing import MutableSet, List, Subclass
+from typing import MutableSet, List, overload
 import numpy as np
 from wrappers import StepResult
 from agents import BaseAgent, OffPolicyMCAgent
@@ -22,6 +22,7 @@ class MCControlTrainer(BaseTrainer):
         super().__init__()
         self.gamma = gamma
 
+    @overload
     def update(
         self, agent: OffPolicyMCAgent, steps: List[StepResult]
     ) -> MutableSet[int]:
