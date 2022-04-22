@@ -18,6 +18,7 @@ class BaseTrainer(abc.ABC, Generic[Agent]):
 
 
 class MCControlTrainer(BaseTrainer[OffPolicyMCAgent]):
+    @overload
     def __init__(self, gamma: float) -> None:
         super().__init__()
         self.gamma = gamma
