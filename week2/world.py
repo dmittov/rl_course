@@ -1,6 +1,5 @@
 import scipy.stats as stats
 from typing import Tuple, Any
-from dataclasses import dataclass
 
 
 class World:
