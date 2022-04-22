@@ -1,7 +1,7 @@
 import abc
 from dataclasses import dataclass
 import random
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 import scipy.stats as stats
 import numpy as np
 
@@ -36,7 +36,7 @@ class EpsilonGreedy(BaseAgent):
     def __init__(self, arms: int, epsilon: float = 0.1):
         super().__init__(arms)
         self.exploration_rate = epsilon
-        self.samples = [0 for _ in range(arms)]
+        self.samples: List[float] = [0.0 for _ in range(arms)]
 
     def _explore(self, probability) -> bool:
         return random.random() < probability
