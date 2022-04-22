@@ -18,7 +18,7 @@ jobs:
 
       - name: Get parent directory and set matrix
         id: set-matrix
-        run: "./.github/scripts/get_changed_dirs.sh terraform 3"
+        run: "./.github/scripts/get_changed_dirs.sh"
 
   format-check:
     needs: [get_changed_dirs]
