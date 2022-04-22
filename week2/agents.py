@@ -1,7 +1,7 @@
 import abc
 from dataclasses import dataclass
 import random
-from typing import Tuple
+from typing import Tuple, Optional
 import scipy.stats as stats
 import numpy as np
 
@@ -110,3 +110,42 @@ class GradientAgent(BaseAgent):
                 )
             else:
                 self.H[i] = self.H[i] - self.alpha * (value - self.mean_R) * probas[i]
+
+
+class UCBAgent(BaseAgent):
+    """Use Upper confidence bounds to make decisions"""
+
+    @dataclass
+    class Params:
+        c: float
+        N: int
+        t: int
+        Q: Optional[float] = None
+
+    def __init__(self, arms: int):
+        super().__init__(arms)
+        self.params = [self.Params(1, 0, 0) for _ in range(arms)]
+
+    def act(self) -> int:
+        results = []
+        for i, arms in enumerate(self.params):
+            if arms.Q is None:
+                return i
+            else:
+                results.append(arms.Q + arms.c * np.sqrt(np.log(arms.t) / arms.N))
+        return np.argmax(results)
+
+    def update(self, action: int, value: float) -> None:
+        for params in self.params:
+            params.t += 1
+
+        old_params = self.params[action]
+        Q = old_params.Q
+        N = old_params.N
+
+        if Q is None:
+            self.params[action].Q = value
+        else:
+            self.params[action].Q = (N / (N + 1)) * Q + (1 / (N + 1)) * value
+
+        self.params[action].N += 1
