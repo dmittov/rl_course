@@ -7,7 +7,7 @@ on:
 jobs:
   get_changed_dirs:
     name: 'Get changed dirs'
-    runs-on: [ self-hosted, default ]
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
