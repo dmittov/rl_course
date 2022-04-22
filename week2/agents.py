@@ -42,11 +42,14 @@ class UCBAgent(BaseAgent):
     
     def __init__(self, arms: int):
         super().__init__(arms)
-        self.params = [self.Params(0, 2, 1, 1) for _ in range(arms)]
+        self.params = [self.Params(None, 2, 0, 0) for _ in range(arms)]
 
     def get_value(self, action: int) -> float:
         params = self.params[action]
-        return params.mu + params.c*np.sqrt(np.log(params.t)/params.N)
+        if params.mu:
+            return params.mu + params.c*np.sqrt(np.log(params.t)/params.N)
+        else:
+            return action
     
     def act(self):
         values = []
@@ -55,16 +58,15 @@ class UCBAgent(BaseAgent):
         return np.argmax(values)
     
     def update(self, action: int, value: float):
-        t = self.params[action].t + 1
-        for idx in range(self.arms):
-            if idx==action:
-                N = self.params[action].N + 1
-                mu = self.params[action].mu*(N/(N+1)) + value*(1/(N+1))
-                self.params[action] = self.Params(mu, 2, t, N)
-            else:
-                N = self.params[idx].N
-                mu = self.params[idx].mu
-                self.params[idx] = self.Params(mu, 2, t, N)
+        for param in self.params:
+            param.t += 1
+        mu = self.params[action].mu
+        N = self.params[action].N
+        if mu:
+            self.params[action].mu = mu + 1/N*(value-mu)
+        else:
+            self.params[action].mu = value
+        self.params[action].N += 1
         
 
 class ThompsonAgent(BaseAgent):
