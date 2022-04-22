@@ -1,23 +1,23 @@
-from typing import MutableSet, List, overload, Type
+from typing import MutableSet, List, overload, TypeVar, Generic
 import numpy as np
 from wrappers import StepResult
 from agents import BaseAgent, OffPolicyMCAgent
 import abc
 
+Agent = TypeVar("Agent", bound=BaseAgent)
 
-class BaseTrainer(abc.ABC):
+
+class BaseTrainer(abc.ABC, Generic[Agent]):
     """Base Trainer accepts Agent and uses episode logs (aka game replays)
     to update agent action values"""
 
     @abc.abstractmethod
-    def update(
-        self, agent: Type[BaseAgent], steps: List[StepResult]
-    ) -> MutableSet[int]:
+    def update(self, agent: Agent, steps: List[StepResult]) -> MutableSet[int]:
         """Update action values, return set of updated states"""
         pass
 
 
-class MCControlTrainer(BaseTrainer):
+class MCControlTrainer(BaseTrainer[OffPolicyMCAgent]):
     def __init__(self, gamma: float) -> None:
         super().__init__()
         self.gamma = gamma

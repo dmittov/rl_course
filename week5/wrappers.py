@@ -116,7 +116,7 @@ class DiscreteWrapper(ObservationWrapper):
 class ActionLogger(Wrapper):
     def __init__(self, env: Env) -> None:
         super().__init__(env)
-        self.__log = []
+        self.__log: List[StepResult] = []
         self.__prev_obeservation = None
 
     @property
