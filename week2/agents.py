@@ -1,7 +1,7 @@
 import abc
 from dataclasses import dataclass
 import random
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 import scipy.stats as stats
 import numpy as np
 
@@ -30,6 +30,32 @@ class RandomAgent(BaseAgent):
         _ = idx
         _ = value
         return None
+
+
+class EpsilonGreedy(BaseAgent):
+    def __init__(self, arms: int, epsilon: float = 0.1):
+        super().__init__(arms)
+        self.exploration_rate = epsilon
+        self.samples: List[float] = [0.0 for _ in range(arms)]
+
+    def _explore(self, probability) -> bool:
+        return random.random() < probability
+
+    def act(self) -> int:
+        if self._explore(self.exploration_rate):
+            return random.randint(0, self.arms - 1)
+        else:
+            return np.argmax(self.samples)
+
+    def update(self, idx: int, value: float) -> None:
+        self.samples[idx] = value
+
+
+class OptimisticInitial(EpsilonGreedy):
+    def __init__(self, arms: int, epsilon: float = 0.0, alpha: int = 5):
+        super().__init__(arms, epsilon)
+        self.initial_value = alpha
+        self.samples = [self.initial_value for _ in range(arms)]
 
 
 class ThompsonAgent(BaseAgent):
