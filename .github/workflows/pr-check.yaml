@@ -3,17 +3,40 @@ on:
   pull_request:
     branches:
       - "main"
+      
 jobs:
+  get_changed_dirs:
+    name: 'Get changed dirs'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
+      - name: Get parent directory and set matrix
+        id: set-matrix
+        run: "./.github/scripts/get_changed_dirs.sh"
+
   format-check:
+    needs: [get_changed_dirs]
     name: code check
     runs-on: ubuntu-latest
+    if: ${{ fromJson(needs.get_changed_dirs.outputs.matrix).include[0] }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.get_changed_dirs.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v2
       - name: black
         uses: rickstaa/action-black@v1
         with:
-          black_args: ". --check"
+          black_args: "${{ matrix.dir }} --check"
+
       - name: mypy
         uses: jpetrucciani/mypy-check@master
         with:
           mypy_flags: "--ignore-missing-imports"
+          path: ${{ matrix.dir }}

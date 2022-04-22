@@ -133,7 +133,7 @@ class UCBAgent(BaseAgent):
                 return i
             else:
                 results.append(arms.Q + arms.c * np.sqrt(np.log(arms.t) / arms.N))
-        return np.argmax(results)
+        return int(np.argmax(results))
 
     def update(self, action: int, value: float) -> None:
         for params in self.params:
