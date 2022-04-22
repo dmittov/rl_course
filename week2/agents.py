@@ -47,8 +47,8 @@ class EpsilonGreedy(BaseAgent):
         else:
             return np.argmax(self.samples)
 
-    def update(self, action: int, value: float) -> None:
-        self.samples[action] = value
+    def update(self, idx: int, value: float) -> None:
+        self.samples[idx] = value
 
 
 class OptimisticInitial(EpsilonGreedy):
