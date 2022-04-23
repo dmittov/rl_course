@@ -35,7 +35,7 @@ class Game:
 
     def __init__(self, sz: int = 4) -> None:
         self.__sz = sz
-        self.__n_states = self.__sz**2
+        self.__n_states = self.__sz ** 2
 
     @property
     def grid_size(self):
