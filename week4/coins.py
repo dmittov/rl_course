@@ -11,7 +11,7 @@ COINS = [3, 7]
 
 
 def change(amount: int) -> Tuple[Optional[int], List[int]]:
-    """Returns 
+    """Returns
     * the minimal amount of coins needed to exchange <amount of cents>
     * optional log how this exchange was done
     """
