@@ -15,19 +15,21 @@ def change(amount: int) -> Tuple[Optional[int], List[int]]:
     * the minimal amount of coins needed to exchange <amount of cents>
     * optional log how this exchange was done
     """
-    dynamic_table = [None] * (amount + 1)
+    dynamic_table: List[Optional[int]] = [None] * (amount + 1)
     # links L1 lists will be more memory efficient here
-    log_table = [list()] * (amount + 1)
+    log_table: List[List[int]] = [list()] * (amount + 1)
     dynamic_table[0] = 0
     log_table[0] = list()
     for current_amount in range(2, amount + 1):
         for coin in COINS:
             prev = current_amount - coin
-            if (prev < 0) or (dynamic_table[prev] is None):
+            prev_minimal_exchange = dynamic_table[prev]
+            if (prev < 0) or (prev_minimal_exchange is None):
                 continue
-            candidate = dynamic_table[prev] + 1
-            if (dynamic_table[current_amount] is None) or (
-                candidate < dynamic_table[current_amount]
+            candidate = prev_minimal_exchange + 1
+            current_minimal_exchange = dynamic_table[current_amount]
+            if (current_minimal_exchange is None) or (
+                candidate < current_minimal_exchange
             ):
                 dynamic_table[current_amount] = candidate
                 log_table[current_amount] = copy(log_table[prev])
