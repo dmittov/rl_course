@@ -1,5 +1,4 @@
-from math import trunc
-from typing import List, Dict
+from typing import List, Dict, Set
 from dataclasses import dataclass
 from functools import cached_property
 import abc
@@ -42,7 +41,7 @@ class Game:
         return self.__sz
 
     @cached_property
-    def states(self) -> List[State]:
+    def states(self) -> Set[State]:
         return {State(x) for x in range(self.__n_states)}
 
     def is_terminal(self, state: State) -> bool:
@@ -107,7 +106,7 @@ class Policy(abc.ABC):
         pass
 
 
-class RandomPolicy:
+class RandomPolicy(Policy):
     def __init__(self, game) -> None:
         self.__game = game
 
@@ -126,7 +125,7 @@ class StateValueTrainer:
         max_iter: int = 10_000,
     ) -> None:
         self.__game = game
-        self.__state_values = {state: 0 for state in self.__game.states}
+        self.__state_values = {state: 0.0 for state in self.__game.states}
         self.__eps = eps
         self.__max_iter = max_iter
         self.__discount = discount
@@ -139,9 +138,9 @@ class StateValueTrainer:
     def state_values(self):
         return self.__state_values
 
-    def __fit_pure(self, policy: Policy) -> None:
+    def __fit_no_sweep(self, policy: Policy) -> float:
         delta = 0.0
-        new_state_values = {state: 0 for state in self.__game.states}
+        new_state_values = {state: 0.0 for state in self.__game.states}
         for state in self.__game.states:
             if self.__game.is_terminal(state):
                 continue
@@ -158,7 +157,7 @@ class StateValueTrainer:
         self.__state_values = new_state_values
         return delta
 
-    def __fit_sweep(self, policy: Policy) -> None:
+    def __fit_sweep(self, policy: Policy) -> float:
         delta = 0.0
         for state in self.__game.states:
             if self.__game.is_terminal(state):
