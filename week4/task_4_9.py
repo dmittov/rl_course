@@ -1,77 +1,51 @@
-from dataclasses import dataclass
-from random import random
-from numpy.random import uniform
 import numpy as np
 
 
-@dataclass
-class State:
-    reward: int
-    is_done: bool
-    bank: int
-
-
 class Environment:
-    def __init__(self, bank: int, target: int, p: float) -> None:
+    def __init__(self, target: int, p: float) -> None:
         # players bank
-        self.__init_bank = bank
-        self.__target = target
-        self.__p = p
-        self.reset()
+        self.target = target
+        self.p = p
+        self.terminal_states = [0, target]
+        self.rewards = self.set_up_rewards(target)
 
-    @property
-    def target(self) -> int:
-        return self.__target
-
-    def reset(self) -> State:
-        self.bank = self.__init_bank
-        return State(reward=0, is_done=False, bank=self.bank)
-
-    def step(self, stake: int) -> State:
-        if (stake > self.bank) or (stake < 1):
-            raise ValueError("Invalid stake")
-        diff = stake if uniform(0, 1) < self.__p else -stake
-        self.bank += diff
-        state = State(reward=0, is_done=False, bank=self.bank)
-        if self.bank >= self.__target:
-            state.is_done = True
-            state.reward = 1
-        elif self.bank <= 0:
-            state.is_done = True
-            state.reward = 0
-        return state
-
-    def get_actions(self):
-        state = self.bank
-        actions = [*range(1, state + 1)]
-        return actions
+    def set_up_rewards(self, target):
+        rewards = [0] * (target + 1)
+        rewards[target] = 1
+        return rewards
 
 
 class Agent:
     def __init__(self, env):
         self.env = env
-        self.states = np.arange(self.env.target + 1)
-        self.state_values = np.ones(self.env.target + 1) * 0.5
-        # rewards in states
-        self.rewards = np.zeros(self.env.target + 1)
-        self.rewards[self.env.target] = 1
+        self.init_state_action_matrix(env.target)
+        self.init_values(env.target)
 
-        # self.greedy_actions = np.ones(self.env.target + 1)
+    def init_state_action_matrix(self, target):
+        res = []
+        for i in range(1, target):
+            row_len = target - i if i > np.floor(target / 2) else i
+            row = [0] * row_len
+            res.append(row)
+        self.sam = res
 
-    def value_estimation(self):
-        # get all possible actions
-        # get all states that can be caused by said actions (2 times as much)
-        # weight the value of those states by their probability + reward of state directly
-        # use thosew to estimate value of action
-        # decide on greedy action and update current value of state
-        actions = self.env.get_actions()
-        new_states = self.env.bank
+    def init_values(self, target):
+        self.values = [0] * (target + 1)
 
-        #
+    def value_update(self):
+        prob = self.env.p
 
-    def policy_improvement(self):
-        for state in self.states:
-            value = self.value_estimation(state)
+        for s, actions in enumerate(self.sam):
+            for action, _ in enumerate(actions):
+                win_s = (s + 1) + (action + 1)
+                loss_s = (s + 1) - (action + 1)
+                q_win = prob * (self.values[win_s] + self.env.rewards[win_s])
+                q_loss = (1 - prob) * (self.values[loss_s] + self.env.rewards[loss_s])
+                self.sam[s][action] = q_win + q_loss
+        self.values = self.apply_policy()
 
-    def act(self):
-        actions = self.env.get_actions()
+    def apply_policy(self):
+        values = [np.mean(i) for i in self.sam]
+        values.append(0)
+        values.insert(0, 0)
+        return values
