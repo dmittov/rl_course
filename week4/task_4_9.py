@@ -57,6 +57,8 @@ class Agent:
         self.greedy_actions = kwargs.get("greedy_actions", np.ones(self.env.target + 1).astype(int))
         self.eps = kwargs.get("eps", 0.1)
         self.gamma = kwargs.get("gamma", 1.)
+        self.n_state_estimates = 0
+        self.policy_improvements = 0
 
     def estimate_action(self, bank: int, stake: int) -> float:
         v_win = 0.
@@ -86,6 +88,7 @@ class Agent:
                 G += action_value * action_prob
             diff = max(abs(self.state_values[state] - G), diff)
             self.state_values[state] = G
+        self.n_state_estimates += 1
         return diff
 
     def improve_policy(self) -> bool:
@@ -102,6 +105,7 @@ class Agent:
             if best_action != self.greedy_actions[state]:
                 has_improvement = True
                 self.greedy_actions[state] = best_action
+        self.policy_improvements += 1
         return has_improvement
 
 
@@ -119,6 +123,72 @@ class Agent:
                 if self.eps < 1e-6:
                     self.eps = 0.
                 self.eps /= 10
+
+    def act(self, bank: int) -> int:
+        return self.greedy_actions[bank]
+
+
+class FastAgent:
+
+    def __init__(self, env, **kwargs):
+        self.env = env
+        self.states = np.arange(self.env.target + 1)
+        self.state_values = uniform(0, 1, self.env.target + 1)
+        self.greedy_actions = kwargs.get("greedy_actions", np.ones(self.env.target + 1).astype(int))
+        self.gamma = kwargs.get("gamma", 1.)
+        self.n_state_estimates = 0
+        self.policy_improvements = 0
+
+    def estimate_action(self, bank: int, stake: int) -> float:
+        v_win = 0.
+        v_lose = 0.
+        if (bank + stake) >= self.env.target:
+            v_win = 1.
+        else:
+            v_win = self.gamma * self.state_values[bank + stake]
+        if (bank - stake) <= 0:
+            v_lose = 0.
+        else:
+            v_lose = self.gamma * self.state_values[bank - stake]
+        action_value = (self.env.p * v_win) + ((1. - self.env.p) * v_lose)
+        return action_value
+
+    def estimate_states(self) -> float:
+        # non-terminal states
+        diff = 0.
+        for state in self.states[1:-1]:
+            greedy_action = self.greedy_actions[state]
+            G = self.estimate_action(state, greedy_action)
+            diff = max(abs(self.state_values[state] - G), diff)
+            self.state_values[state] = G
+        self.n_state_estimates += 1
+        return diff
+
+    def improve_policy(self) -> bool:
+        has_improvement = False
+        for state in self.states[1:-1]:
+            best_action = None
+            current_estimation = -1  # any reasonable estimation is >= 0 
+            possible_actions = list(range(1, state + 1))
+            for stake in possible_actions:
+                action_value = self.estimate_action(state, stake)
+                if action_value > current_estimation:
+                    current_estimation = action_value
+                    best_action = stake
+            if best_action != self.greedy_actions[state]:
+                has_improvement = True
+                self.greedy_actions[state] = best_action
+        self.policy_improvements += 1
+        return has_improvement
+
+
+    def fit(self) -> None:
+        max_iter = 10_000
+        for it in range(max_iter):
+            delta = self.estimate_states()
+            self.improve_policy()
+            if delta < 1e-6:
+                break
 
     def act(self, bank: int) -> int:
         return self.greedy_actions[bank]
