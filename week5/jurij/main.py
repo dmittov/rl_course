@@ -3,7 +3,7 @@ from agent import Agent
 import numpy as np
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     env = Environment(0.1)
     agent = Agent(env)
     for i in range(1_000_000):
