@@ -100,7 +100,7 @@ class Agent:
         has_improvement = False
         for state in self.states[1:-1]:
             best_action = None
-            current_estimation = -1  # any reasonable estimation is >= 0
+            current_estimation = -1.0  # any reasonable estimation is >= 0
             possible_actions = list(range(1, state + 1))
             for stake in possible_actions:
                 action_value = self.estimate_action(state, stake)
@@ -173,7 +173,7 @@ class FastAgent:
         has_improvement = False
         for state in self.states[1:-1]:
             best_action = None
-            current_estimation = -1  # any reasonable estimation is >= 0
+            current_estimation = -1.0  # any reasonable estimation is >= 0
             possible_actions = list(range(1, state + 1))
             for stake in possible_actions:
                 action_value = self.estimate_action(state, stake)
