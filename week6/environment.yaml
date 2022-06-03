@@ -1,0 +1,16 @@
+dependencies:
+  - black
+  - tqdm
+  - scipy
+  - numpy
+  - jupyter
+  - matplotlib
+  - pyglet
+  - pytorch
+  - jupyter
+  - tensorboard
+  - ffmpeg
+  - imageio-ffmpeg
+  - pip:
+      - gym
+      - pygame
