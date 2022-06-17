@@ -33,11 +33,13 @@ class GridBuilderHelper():
         new_state = state[axis] + move
         return (new_state < 0) or (new_state > self.border[axis])
 
-    def build_state_actions(self):
+    def build_state_actions(self, terminal):
         state_action = {}
         for x in range(self.i + 1):
             for y in range(self.j + 1):
                 key = (x, y)
+                if key in terminal:
+                    continue
                 state_action[key] = []
                 for action in ACTION_SPACE:
                     if not self.breaking_border(key, action):
@@ -58,8 +60,12 @@ class WindyGrid:
     def __init__(self, rows, cols, start):
         self.rows = rows
         self.cols = cols
-        self.i = start[0]
-        self.j = start[1]
+        self.start = start
+        self.reset()
+
+    def reset(self):
+        self.i = self.start[0]
+        self.j = self.start[1]
 
     def set(self, rewards, actions, probs):
         # rewards should be a dict of: (i, j): r (row, col): reward
@@ -74,9 +80,6 @@ class WindyGrid:
 
     def current_state(self):
         return (self.i, self.j)
-
-    def is_terminal(self, s):
-        return s not in self.actions
 
     def move(self, action):
         s = (self.i, self.j)
@@ -105,12 +108,23 @@ class WindyGrid:
         # or a position that yields a reward
         return set(self.actions.keys()) | set(self.rewards.keys())
 
+    def get_state_actions(self):
+        return self.actions
+
+    def get_actions(self, state):
+        return self.actions[state]
+
 
 def windy_grid(x_max: int, y_max: int, start: tuple):
     helper = GridBuilderHelper(x_max, y_max)
     g = WindyGrid(x_max, y_max, start)
-    rewards = {(0, 3): 1, (1, 3): -1}
-    actions = helper.build_state_actions()
+    rewards = {(2, 5): 1}
+    terminal = rewards.keys()
+    actions = helper.build_state_actions(terminal)
     probs = helper.build_action_probs(actions)
+
+    ## here you can set a custom transition chance, e.g. move 2 fields up instead of one
+    ## syntax: probs[(state, action)] = {s_prime: probability}
+    # probs[((0, 0), 'R')] = {(2, 5): 1.0}
     g.set(rewards, actions, probs)
     return g
