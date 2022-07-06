@@ -24,10 +24,10 @@ class GridAgent:
         r = self.env.move(action)
         s_prime = self.env.current_state()
         q_prime_max_a = 0 if self.env.game_over() else max(self.Q[s_prime].values())
-        try:
-            self.Q[s][action] = self.Q[s][action] + self.alpha * (r + self.gamma * q_prime_max_a - self.Q[s][action])
-        except:
-            import pdb; pdb.set_trace()
+
+        self.Q[s][action] = self.Q[s][action] + self.alpha * (
+            r + self.gamma * q_prime_max_a - self.Q[s][action]
+        )
 
     def apply_policy(self, state):
         if np.random.uniform(0, 1) <= self.eps:
@@ -37,7 +37,5 @@ class GridAgent:
         return action
 
     def get_best_action(self, state):
-        idx = np.argmax(
-            list(self.Q[state].values())
-        )
+        idx = np.argmax(list(self.Q[state].values()))
         return list(self.Q[state].keys())[idx]

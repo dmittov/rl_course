@@ -1,17 +1,12 @@
 import numpy as np
 
 
-ACTION_SPACE = ('U', 'D', 'L', 'R')
+ACTION_SPACE = ("U", "D", "L", "R")
 
 
-class GridBuilderHelper():
+class GridBuilderHelper:
 
-    action_mapping = {
-        'U': (0, -1),
-        'D': (0, 1),
-        'L': (1, -1),
-        'R': (1, 1)
-    }
+    action_mapping = {"U": (0, -1), "D": (0, 1), "L": (1, -1), "R": (1, 1)}
 
     def __init__(self, i, j):
         self.i = i

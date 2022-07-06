@@ -25,18 +25,18 @@ for i in range(1, 5000):
         agent.act()
         terminal = grid.game_over()
 
-results = np.zeros(shape = (x + 1, y + 1))
-labels = np.empty(shape = (x + 1, y + 1), dtype=str)
+results = np.zeros(shape=(x + 1, y + 1))
+labels = np.empty(shape=(x + 1, y + 1), dtype=str)
 
 for state, actions in agent.Q.items():
     x = state[0]
     y = state[1]
     results[x, y] = max(actions.values())
-    labels[x,y] = agent.get_best_action(state)
+    labels[x, y] = agent.get_best_action(state)
 
 terminal_state = grid.current_state()
 labels[terminal_state[0], terminal_state[1]] = None
 results[start] = None
 
-sns.heatmap(results, annot=labels, fmt='', linewidths=0.1)
+sns.heatmap(results, annot=labels, fmt="", linewidths=0.1)
 plt.show()
