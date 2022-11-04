@@ -1,5 +1,8 @@
 import pytest
-from numpy_nn.layers import *
+from numpy_nn import *
+from torch import nn
+import torch
+
 
 class TestNormalization:
     def test_2d_smoke(self):
@@ -16,13 +19,12 @@ class TestNormalization:
 class TestSigmoid:
     def test_zero(self):
         sigmoid = Sigmoid()
-        result = sigmoid.forward(np.array([0.]))
+        result = sigmoid.forward(np.array([0.0]))
         expected = np.array([0.5])
         assert np.isclose(expected, result)
 
 
 class TestLinear:
-
     @pytest.fixture
     def in_features(self) -> int:
         return 4
@@ -34,7 +36,7 @@ class TestLinear:
     @pytest.fixture
     def batch_size(self) -> int:
         return 12
-    
+
     @pytest.fixture
     def linear(self, in_features: int, out_features: int) -> Linear:
         return Linear(in_features, out_features)
@@ -62,10 +64,22 @@ class TestLinear:
 
 
 class TestLogLoss:
-
     def test_smoke(self):
-        loss = LogLoss()
         y_true = np.array([1, 0]).astype(np.float32)
-        y_pred = np.array([1., 0.]).astype(np.float32)
-        assert np.all(np.isclose(loss(y_true, y_pred), np.zeros(y_true.shape)))
+        loss = LogLoss()
+        y_pred = np.array([1.0, 0.0]).astype(np.float32)
+        assert np.isclose(loss.loss(y_pred, y_true), 0.0)
 
+    def test_correct_bce(self):
+        sz = 100
+        y_true = np.random.choice([0, 1], size=sz)
+        y_pred = np.random.uniform(low=0.0, high=1.0, size=sz)
+        expected_loss = float(
+            nn.BCELoss()(
+                torch.from_numpy(y_pred), torch.from_numpy(y_true.astype(float))
+            )
+            .detach()
+            .numpy()
+        )
+        actual_loss = LogLoss().loss(y_pred, y_true)
+        assert np.isclose(expected_loss, actual_loss)
